@@ -18,6 +18,13 @@ $ tar xzvf textgrid.tar.gz
 $ tar xzvf lab.tar.gz
 ```
 
+## Note on syllabified textgrids
+
+File `textgrid_syls.tar.zst` contains the aligned textgrids with
+additional `syllables` tier which adds maximum-onset syllable
+alignments. This set is only for the `train-clean-100`, `dev-clean`
+and `test-clean` sets.
+
 ## Missing files
 
 Due to the alignment failures, some labels are missing (1,255 files, around 0.4 %).
