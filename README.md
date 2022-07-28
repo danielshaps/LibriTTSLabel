@@ -21,9 +21,15 @@ $ tar xzvf lab.tar.gz
 ## Note on syllabified textgrids
 
 File `textgrid_syls.tar.zst` contains the aligned textgrids with
-additional `syllables` tier which adds maximum-onset syllable
-alignments. This set is only for the `train-clean-100`, `dev-clean`
-and `test-clean` sets.
+additional `syllables` tier which adds intra-word maximum-onset
+syllable alignments, an `iphrases` tier which marks intonation phrases
+based on the presence of pauses, and `ipsyls` tier which applies
+maximum-onset syllabification across word boundaries (intra-phrase)
+and adds glottal closure symbols to phrase-initial syllables that
+start with a vowel.
+
+This set is only for the `train-clean-100`, `dev-clean` and
+`test-clean` sets.
 
 ## Missing files
 
