@@ -14,7 +14,7 @@ import speechlabels as sl
 PHNTIER = "phones"
 IGNORE = {""}
 EMPTY_SEGMENT = ""
-GLOTTAL_ONSET = "CL"
+UTT_BOUNDARY = "#"
 
 Segment = namedtuple("Segment", ["start", "end", "label"])
 
@@ -33,7 +33,7 @@ def get_segments(boundslist, start=None, end=None, ignore=None, maplab=None):
         yield Segment(segstart, segend, seglab if maplab is None else maplab(seglab))
 
 
-def syllabify_textgrid(spans, phones, phoneset, vowels, syllabify, add_glot, prefix):
+def syllabify_textgrid(spans, phones, phoneset, vowels, plosives, syllabify, add_uttbound, prefix):
     utt_syls = []
     for span in get_segments(spans, ignore=IGNORE):
         span_phones = list(get_segments(phones, span.start, span.end))
@@ -48,8 +48,10 @@ def syllabify_textgrid(spans, phones, phoneset, vowels, syllabify, add_glot, pre
         phone_idx = 0
         for i, syl in enumerate(syllables):
             syllab = "-".join(syl)
-            if i == 0 and add_glot and syl[0] in vowels:
-                syllab = "-".join([GLOTTAL_ONSET, syllab])
+            if i == 0 and add_uttbound and syl[0] in vowels:
+                syllab = "-".join([UTT_BOUNDARY, syllab])
+            if (i+1) == len(syllables) and add_uttbound and syl[-1] in plosives:
+                syllab = "-".join([syllab, UTT_BOUNDARY])
             if prefix:
                 syllab = "_".join([span.label, syllab])
             utt_syls.append(Segment(span_phones[phone_idx].start,
@@ -97,16 +99,18 @@ def syllabify(phones, vowels, vwls_re, cons_re):
 @click.command()
 @click.option("--phoneset", show_default=True, default="etc/phoneset.txt", type=click.File())
 @click.option("--vowels", show_default=True, default="etc/vowels.txt", type=click.File())
+@click.option("--plosives", show_default=True, default="etc/plosives.txt", type=click.File())
 @click.option("--onsets", show_default=True, default="etc/onsets.txt", type=click.File())
 @click.option("--no_prefix", is_flag=True)
-@click.option("--add_glot", is_flag=True)
+@click.option("--add_uttbound", is_flag=True)
 @click.option("--spantier", show_default=True, default="words", type=str)
 @click.option("--outtier", show_default=True, default="syllables", type=str)
 @click.option("--outdir", type=click.Path())
 @click.argument("input_files", nargs=-1, required=True, type=click.Path(exists=True))
-def main(phoneset, vowels, onsets, no_prefix, add_glot, spantier, outtier, outdir, input_files):
+def main(phoneset, vowels, plosives, onsets, no_prefix, add_uttbound, spantier, outtier, outdir, input_files):
     phoneset = set(e for e in phoneset.read().split() if e)
     vowels = set(e for e in vowels.read().split() if e)
+    plosives = set(e for e in plosives.read().split() if e)
     onsets = set(e for e in onsets.read().split() if e)
     consonants = set(ph for ph in phoneset if not ph in vowels)
 
@@ -125,7 +129,14 @@ def main(phoneset, vowels, onsets, no_prefix, add_glot, spantier, outtier, outdi
         if (i + 1) % 100 == 0:
             print(f"INFO: Processed {i + 1} files...", file=sys.stderr)
         tiers, phntier = sl.Utterance.readTextgrid(fpath, maintier=PHNTIER)
-        syltier = segs_to_tier(syllabify_textgrid(tiers[spantier], phntier, phoneset, vowels, sylf, add_glot, not no_prefix))
+        syltier = segs_to_tier(syllabify_textgrid(tiers[spantier],
+                                                  phntier,
+                                                  phoneset,
+                                                  vowels,
+                                                  plosives,
+                                                  sylf,
+                                                  add_uttbound,
+                                                  not no_prefix))
         tiers[outtier] = syltier + [[phntier[-1][0], EMPTY_SEGMENT]]
         if outdir is not None:
             outfname = os.path.join(outdir, os.path.basename(fpath))

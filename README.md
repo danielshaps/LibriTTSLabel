@@ -25,8 +25,8 @@ additional `syllables` tier which adds intra-word maximum-onset
 syllable alignments, an `iphrases` tier which marks intonation phrases
 based on the presence of pauses, and `ipsyls` tier which applies
 maximum-onset syllabification across word boundaries (intra-phrase)
-and adds glottal closure symbols to phrase-initial syllables that
-start with a vowel.
+and adds phrase-boundary symbols to initial syllables that start with
+a vowel and final syllables that end with a plosive.
 
 This set is only for the `train-clean-100`, `dev-clean` and
 `test-clean` sets.
